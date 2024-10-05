@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">DoItNow</string>
+    <string name="greeting">Hello, Chirath 👋</string>
+    <string name="mainHeading">Manage Your Daily Task</string>
+    <string name="highPriority">High Priority</string>
+    <string name="mdPriority">Medium Priority</string>
+    <string name="lwPriority">Low Priority</string>
+    <string name="upcoming">UpComing</string>
+    <string name="seeAll">See All</string>
+    <string name="high">High</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="todoTitlle">TODOs</string>
+</resources>
