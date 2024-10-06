@@ -1,55 +1,60 @@
 package com.example.doit
 
-
-
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.asLiveData
+import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalTime
-import java.util.UUID
 
+class ViewTask(private val repo: TaskItemRepo) : ViewModel() {
 
-object ViewTask {
+    var taskItems: LiveData<List<TaskItem>> = repo.allTaskItems.asLiveData()
 
-    var taskItems = MutableLiveData<MutableList<TaskItem>>()
-
-    init {
-        taskItems.value = mutableListOf()
+    fun addTask(newTask: TaskItem) = viewModelScope.launch {
+        repo.insertTaskItem(newTask)
     }
 
-    fun addTask(newTask: TaskItem) {
-        val list = taskItems.value
-        list!!.add(newTask)
-        taskItems.postValue(list)
+    fun updateTask(taskItem: TaskItem) = viewModelScope.launch {
+        repo.updateTaskItem(taskItem)
     }
 
-    fun updateTask(id: UUID,name: String, desc: String, dueTime: LocalTime?  ) {
-        val list = taskItems.value
-        val task = list!!.find  { it.id == id }
-        task?.name = name
-        task?.desc = desc
-        task?.dueTime = dueTime
-        taskItems.postValue(list)
+    fun deleteTask(taskItem: TaskItem) {
+        viewModelScope.launch {
+            repo.deleteTask(taskItem)
+        }
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun setCompleted(taskItem: TaskItem) {
-        // Create a mutable copy of the current list
-        val list = taskItems.value?.toMutableList() ?: mutableListOf()
-        // Find the task to be updated based on its ID
-        val task = list.find { it.id == taskItem.id }
-
-        // Check if the task was found and is not already completed
-        if (task != null && task.completedDate == null) {
-            // Set the completedDate to the current date
-            task.completedDate = LocalDate.now() // Use assignment
+    fun setCompleted(taskItem: TaskItem) = viewModelScope.launch {
+        if (!taskItem.isCompleted()) {
+            taskItem.completedDateString = TaskItem.dateFormat.format(LocalDate.now())
+            repo.updateTaskItem(taskItem)
         }
-
-        // Post the updated list back to LiveData
-        taskItems.postValue(list)
     }
 
+    // Change the return type to LiveData<TaskItem?>
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getTaskById(taskId: Int): LiveData<TaskItem?> {
+        // Use MutableLiveData to hold the result
+        val taskLiveData = MutableLiveData<TaskItem?>()
 
+        viewModelScope.launch {
+            taskLiveData.value = repo.getTaskById(taskId) // Now a suspend function
+        }
+
+        return taskLiveData
+    }
+}
+
+class TaskItemModelFactory(private val repo: TaskItemRepo) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ViewTask::class.java))
+            return ViewTask(repo) as T
+        throw IllegalArgumentException("Unknown Class")
+    }
 }

@@ -10,7 +10,7 @@
         tools:context=".AddTasks">
 
         <ImageButton
-            android:id="@+id/imageButton2"
+            android:id="@+id/closeBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -29,7 +29,7 @@
             android:textColor="@color/white"
             android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/imageButton2"
+            app:layout_constraintStart_toEndOf="@+id/closeBtn"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView

@@ -4,61 +4,42 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.RequiresApi
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
+@Entity(tableName = "task_table")
 class TaskItem(
-    var name: String,
-    var desc: String,
-    var dueTime: LocalTime?,
-    var completedDate: LocalDate?,
-    var id: UUID = UUID.randomUUID()
-) : Parcelable {
-
+    @ColumnInfo(name = "taskName") var name: String,
+    @ColumnInfo(name = "taskDesc") var desc: String,
+    @ColumnInfo(name = "taskPriority") var priority: String? = "Low",
+    @ColumnInfo(name = "dueTime") var dueTimeString: String?,
+    @ColumnInfo(name = "completedDate") var completedDateString: String?,
+    @PrimaryKey(autoGenerate = true) var id: Int = 0
+)  {
 
     @RequiresApi(Build.VERSION_CODES.O)
-    constructor(parcel: Parcel) : this(
-        parcel.readString() ?: "",
-        parcel.readString() ?: "",
-        // Read dueTime as a String and convert back to LocalTime
-        parcel.readString()?.let { LocalTime.parse(it, DateTimeFormatter.ISO_LOCAL_TIME) },
-        // Read completedDate as a String and convert back to LocalDate
-        parcel.readString()?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) },
-        UUID.fromString(parcel.readString() ?: "")
-    )
+    fun completedDate(): LocalDate? = if (completedDateString == null) null
+        else LocalDate.parse(completedDateString, dateFormat)
 
-    // Function to write to Parcel
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(name)
-        parcel.writeString(desc)
-        // Convert dueTime to String before writing
-        parcel.writeString(dueTime?.format(DateTimeFormatter.ISO_LOCAL_TIME))
-        // Convert completedDate to String before writing
-        parcel.writeString(completedDate?.format(DateTimeFormatter.ISO_LOCAL_DATE))
-        parcel.writeString(id.toString())
-    }
-
-    // Required method
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    // Companion object to handle Parcelable creation
-    companion object CREATOR : Parcelable.Creator<TaskItem> {
-        @RequiresApi(Build.VERSION_CODES.O)
-        override fun createFromParcel(parcel: Parcel): TaskItem {
-            return TaskItem(parcel)
-        }
-
-        override fun newArray(size: Int): Array<TaskItem?> {
-            return arrayOfNulls(size)
-        }
+    fun dueTime(): LocalTime? = dueTimeString?.let {
+        LocalTime.parse(it, timeFormatter)
     }
 
     // Other functions
-    fun isCompleted() = completedDate != null
+    fun isCompleted() = completedDateString != null
+
     fun imageResource(): Int = if (isCompleted()) R.drawable.check24 else R.drawable.unchecked_24
+
+    companion object {
+        @RequiresApi(Build.VERSION_CODES.O)
+        val timeFormatter: DateTimeFormatter = DateTimeFormatter.ISO_TIME
+        @RequiresApi(Build.VERSION_CODES.O)
+        val dateFormat: DateTimeFormatter = DateTimeFormatter.ISO_DATE
+    }
 }

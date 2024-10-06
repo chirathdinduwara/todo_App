@@ -21,12 +21,12 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/taskPriority"
                 android:layout_width="73dp"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="30dp"
                 android:background="@drawable/rounded_textbg_hpriority"
                 android:padding="5dp"
-                android:text="@string/high"
                 android:textAlignment="center"
                 android:textColor="@color/white" />
 
