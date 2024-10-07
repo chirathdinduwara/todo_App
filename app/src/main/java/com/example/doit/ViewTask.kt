@@ -1,6 +1,7 @@
 package com.example.doit
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -8,6 +9,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.asLiveData
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -49,6 +54,29 @@ class ViewTask(private val repo: TaskItemRepo) : ViewModel() {
 
         return taskLiveData
     }
+
+    // StateFlow to hold the current search query
+    private val _searchQuery = MutableStateFlow("")
+
+    // LiveData to emit search results
+    val searchResults: LiveData<List<TaskItem>> = _searchQuery
+        .debounce(300) // Wait for 300ms of inactivity before processing
+        .distinctUntilChanged() // Only proceed if the query has changed
+        .flatMapLatest { query ->
+            if (query.isEmpty()) {
+                repo.allTaskItems
+            } else {
+                repo.searchTasks(query)
+            }
+        }
+        .asLiveData()
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value= query
+        Log.d("SearchTasks", "Tasks: ${_searchQuery.toString()}")
+    }
+
+
 }
 
 class TaskItemModelFactory(private val repo: TaskItemRepo) : ViewModelProvider.Factory {

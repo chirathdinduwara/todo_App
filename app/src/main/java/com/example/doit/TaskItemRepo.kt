@@ -27,4 +27,8 @@ class TaskItemRepo(private val taskItemDao: TaskItemDao) {
     suspend fun getTaskById(taskId: Int): TaskItem? {
         return taskItemDao.getTaskById(taskId) // Now a suspend function
     }
+
+    fun searchTasks(query: String): Flow<List<TaskItem>> {
+        return taskItemDao.searchTasks(query)
+    }
 }

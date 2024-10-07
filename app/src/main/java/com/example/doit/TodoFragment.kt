@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.SearchView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
@@ -43,7 +44,8 @@ class TodoFragment : Fragment(), TaskItemClickListner {
 
         // Setup the RecyclerView
         setRecycleView()
-
+        // Setup the SearchView
+        setupSearchView()
 
 
         val fab: FloatingActionButton = binding.addTask
@@ -59,7 +61,9 @@ class TodoFragment : Fragment(), TaskItemClickListner {
     private fun setRecycleView() {
         binding.taskRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        viewTasks.taskItems.observe(viewLifecycleOwner) { taskItems ->
+        // Observe search results instead of taskItems
+        viewTasks.searchResults.observe(viewLifecycleOwner) { taskItems ->
+            // Update the adapter with search results
             taskAdapter = TaskItemAdapter(taskItems?.toMutableList() ?: mutableListOf(), this)
             binding.taskRecyclerView.adapter = taskAdapter
 
@@ -81,7 +85,7 @@ class TodoFragment : Fragment(), TaskItemClickListner {
                     // Delete the task from ViewModel
                     viewTasks.deleteTask(taskItem)
 
-                    // show a toast
+                    // Show a toast
                     Toast.makeText(requireContext(), "${taskItem.name} deleted", Toast.LENGTH_SHORT).show()
                 }
 
@@ -94,7 +98,6 @@ class TodoFragment : Fragment(), TaskItemClickListner {
                     actionState: Int,
                     isCurrentlyActive: Boolean
                 ) {
-
                     super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
                 }
             })
@@ -102,6 +105,7 @@ class TodoFragment : Fragment(), TaskItemClickListner {
             itemTouchHelper.attachToRecyclerView(binding.taskRecyclerView)
         }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun editTaskItem(taskItem: TaskItem) {
@@ -134,6 +138,24 @@ class TodoFragment : Fragment(), TaskItemClickListner {
         taskAdapter.notifyDataSetChanged() // Notify the adapter to refresh the RecyclerView
         Toast.makeText(requireContext(), "${taskItem.name} marked as completed", Toast.LENGTH_SHORT).show()
     }
+
+    private fun setupSearchView() {
+        val searchView: SearchView = binding.searchView
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                // Optional: Handle search query submission
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                viewTasks.setSearchQuery(newText ?: "")
+
+                return true
+            }
+        })
+    }
+
 
 
 }

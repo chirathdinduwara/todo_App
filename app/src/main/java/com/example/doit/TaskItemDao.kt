@@ -25,4 +25,13 @@ interface TaskItemDao {
 
     @Query("SELECT * FROM task_table WHERE id = :taskId")
     suspend fun getTaskById(taskId: Int): TaskItem?
+
+    @Query("""
+    SELECT * FROM task_table 
+    WHERE taskName LIKE '%' || :query || '%' 
+       OR taskDesc LIKE '%' || :query || '%' 
+    ORDER BY id ASC
+""")
+    fun searchTasks(query: String): Flow<List<TaskItem>>
+
 }
