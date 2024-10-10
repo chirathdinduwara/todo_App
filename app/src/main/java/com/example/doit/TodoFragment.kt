@@ -4,6 +4,7 @@ import TaskItemAdapter
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -26,6 +27,7 @@ class TodoFragment : Fragment(), TaskItemClickListner {
     private lateinit var binding: FragmentTodoBinding
     private lateinit var viewTasks: ViewTask
     private lateinit var taskAdapter: TaskItemAdapter
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,9 +63,8 @@ class TodoFragment : Fragment(), TaskItemClickListner {
     private fun setRecycleView() {
         binding.taskRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Observe search results instead of taskItems
         viewTasks.searchResults.observe(viewLifecycleOwner) { taskItems ->
-            // Update the adapter with search results
+
             taskAdapter = TaskItemAdapter(taskItems?.toMutableList() ?: mutableListOf(), this)
             binding.taskRecyclerView.adapter = taskAdapter
 
@@ -118,7 +119,7 @@ class TodoFragment : Fragment(), TaskItemClickListner {
         // Create an Intent to start the AddTasks activity
         val intent = Intent(context, AddTasks::class.java).apply {
             putExtra("TASK_NAME", taskItem.name)
-            putExtra("TASK_DESC", taskItem.desc)
+
             putExtra("DUE_TIME", taskItem.dueTime()?.toString()) // Convert LocalTime to String
             putExtra("COMPLETED_DATE", taskItem.completedDate()?.toString()) // Convert LocalDate to String
             putExtra("TASK_ID", taskItem.id.toString()) // Pass the ID

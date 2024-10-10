@@ -72,7 +72,6 @@ class TaskItemViewHolder(
         binding.root.setOnLongClickListener {
             val intent = Intent(context, AddTasks::class.java).apply {
                 putExtra("TASK_NAME", taskItem.name)
-                putExtra("TASK_DESC", taskItem.desc)
                 putExtra("DUE_TIME", taskItem.dueTime()?.toString()) // Convert LocalTime to String
                 putExtra("COMPLETED_DATE", taskItem.completedDate()?.toString()) // Convert LocalDate to String
                 putExtra("TASK_ID", taskItem.id.toString()) // Pass the ID to recognize which task is being edited

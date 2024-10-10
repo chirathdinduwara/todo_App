@@ -2,7 +2,10 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/taskItemCell">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/taskItemCell"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,7 +41,7 @@
                 android:layout_marginTop="10dp"
                 android:fontFamily="sans-serif-medium"
                 android:text="ITP Project"
-                android:textColor="@color/white"
+                android:textColor="@color/black"
                 android:textSize="20dp" />
 
             <LinearLayout
@@ -59,7 +62,7 @@
                     android:layout_marginLeft="12dp"
                     android:textSize="15dp"
                     android:fontFamily="sans-serif"
-                    android:textColor="@color/white" />
+                    android:textColor="@color/black" />
 
             </LinearLayout>
 

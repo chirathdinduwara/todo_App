@@ -55,13 +55,13 @@ class ViewTask(private val repo: TaskItemRepo) : ViewModel() {
         return taskLiveData
     }
 
-    // StateFlow to hold the current search query
+
     private val _searchQuery = MutableStateFlow("")
 
-    // LiveData to emit search results
+
     val searchResults: LiveData<List<TaskItem>> = _searchQuery
-        .debounce(300) // Wait for 300ms of inactivity before processing
-        .distinctUntilChanged() // Only proceed if the query has changed
+        .debounce(300) // Wait for 300ms
+        .distinctUntilChanged()
         .flatMapLatest { query ->
             if (query.isEmpty()) {
                 repo.allTaskItems

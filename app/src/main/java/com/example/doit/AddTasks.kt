@@ -1,6 +1,10 @@
 package com.example.doit
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.app.TimePickerDialog
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -11,6 +15,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
+import android.widget.Switch
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -23,12 +28,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.util.Calendar
 
 class AddTasks : AppCompatActivity() {
 
     private lateinit var addTaskHeading: TextView
     private lateinit var taskName: EditText
-    private lateinit var taskDecs: EditText
+
     private lateinit var taskPriority: Spinner
     private var dueTime: LocalTime? = null
     private lateinit var addButton: Button
@@ -36,6 +42,7 @@ class AddTasks : AppCompatActivity() {
     private lateinit var closeBtn: ImageButton
     private var taskItem: TaskItem? = null
     private var selectedPriority: String? = null
+    private var reminderSwitch: Switch? = null
 
     private val viewTask: ViewTask by viewModels{
         TaskItemModelFactory((application as TodoApplication).repo)
@@ -50,43 +57,47 @@ class AddTasks : AppCompatActivity() {
         // Initialize views
         addTaskHeading = findViewById(R.id.addTaskHeading)
         taskName = findViewById(R.id.taskName)
-        taskDecs = findViewById(R.id.taskDecs)
+
         taskPriority = findViewById(R.id.taskPriority)
         addButton = findViewById(R.id.addbtn)
         setTime = findViewById(R.id.setTime)
         closeBtn = findViewById(R.id.closeBtn)
+        reminderSwitch = findViewById(R.id.reminderSwitch)
 
-        // Create an array of priorities
+
+
         val priorities = arrayOf("Low", "Medium", "High")
 
-        // Create an ArrayAdapter using the string array and a default spinner layout
+
+
+
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, priorities)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        taskPriority.adapter = adapter // Corrected variable name
+        taskPriority.adapter = adapter
 
         taskPriority.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
-                selectedPriority = priorities[position] // Get the selected priority
+                selectedPriority = priorities[position]
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
-                selectedPriority = null // Handle case where no selection is made
+                selectedPriority = null
             }
         }
 
-        // Retrieve task details from intent extras for editing
+
         val taskId = intent.getStringExtra("TASK_ID")?.toInt()
 
         if (taskId != null) {
-            // Observe the LiveData returned by getTaskById
+
             viewTask.getTaskById(taskId.toInt()).observe(this) { task ->
                 if (task != null) {
-                    taskItem = task // Now you can assign it since task is not null
+                    taskItem = task
                     addTaskHeading.text = "Update a Task"
                     addButton.text = "Update"
 
                     taskName.setText(task.name)
-                    taskDecs.setText(task.desc)
+
 
                     task.dueTime()?.let {
                         dueTime = it
@@ -138,37 +149,79 @@ class AddTasks : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveData() {
         val taskNameText = taskName.text.toString()
-        val taskDecsText = taskDecs.text.toString()
         val taskPriority = selectedPriority
         val dueTimeString = if (dueTime == null) null else TaskItem.timeFormatter.format(dueTime)
 
         if (taskItem == null) {
             // Create new task
-            val newTask = TaskItem(taskNameText, taskDecsText, taskPriority, dueTimeString, null)
-            viewTask.addTask(newTask)
+            taskItem = TaskItem(taskNameText, taskPriority, dueTimeString, null, reminderEnabled = reminderSwitch!!.isChecked)
+            viewTask.addTask(taskItem!!) // Add the new task
 
             Toast.makeText(this, "Task Added", Toast.LENGTH_SHORT).show()
         } else {
             // Update existing task
-            taskItem?.name = taskNameText
-            taskItem?.priority = taskPriority
-            taskItem?.dueTimeString = dueTimeString
-            viewTask.updateTask(taskItem!!)
+            taskItem?.apply {
+                name = taskNameText
+                priority = taskPriority
+                reminderEnabled = reminderSwitch!!.isChecked // Update reminder status
+            }
+            viewTask.updateTask(taskItem!!) // Update the task
 
             Toast.makeText(this, "Task Updated", Toast.LENGTH_SHORT).show()
         }
 
-        Log.d("AddTasks", "Updating Task: ${taskItem?.name}")
+        Log.d("AddTasks", "Saving Task: ${taskItem?.name} with Reminder: ${reminderSwitch!!.isChecked}")
+
+        reminderSwitch?.setOnCheckedChangeListener { _, isChecked ->
+            taskItem?.reminderEnabled = isChecked // Use safe call operator
+            if (isChecked) {
+                setTaskReminder(taskItem!!) // Set the reminder
+            } else {
+                cancelTaskReminder(taskItem!!) // Cancel the reminder
+            }
+            viewTask.updateTask(taskItem!!) // Update the task
+        }
+        // Set reminder if enabled
+        if (reminderSwitch!!.isChecked) {
+            setTaskReminder(taskItem!!) // Call to set reminder
+        } else {
+            cancelTaskReminder(taskItem!!) // Call to cancel reminder if it was previously set
+        }
+
         // Clear input fields
         taskName.text.clear()
-        taskDecs.text.clear()
 
         finish()
-
-
     }
+
 
     private fun goBack() {
         finish()
     }
+
+    private fun setTaskReminder(task: TaskItem) {
+        if (task.reminderEnabled) {
+
+            val notificationId = task.id
+            val intent = Intent(this, ReminderReceiver::class.java).apply {
+                putExtra("taskName", task.name) // Pass task details to the receiver
+            }
+            val pendingIntent = PendingIntent.getBroadcast(this, notificationId, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+
+            val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+            val triggerTime = System.currentTimeMillis() + 300
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+        }
+    }
+
+    private fun cancelTaskReminder(task: TaskItem) {
+        val notificationId = task.id
+        val intent = Intent(this, ReminderReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(this, notificationId, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(pendingIntent)
+    }
+
 }

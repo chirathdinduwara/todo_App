@@ -15,10 +15,10 @@ import java.util.UUID
 @Entity(tableName = "task_table")
 class TaskItem(
     @ColumnInfo(name = "taskName") var name: String,
-    @ColumnInfo(name = "taskDesc") var desc: String,
     @ColumnInfo(name = "taskPriority") var priority: String? = "Low",
     @ColumnInfo(name = "dueTime") var dueTimeString: String?,
     @ColumnInfo(name = "completedDate") var completedDateString: String?,
+    @ColumnInfo(name = "reminderEnabled") var reminderEnabled: Boolean = false,
     @PrimaryKey(autoGenerate = true) var id: Int = 0
 )  {
 

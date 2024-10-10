@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:name=".TodoApplication"
         android:allowBackup="true"
@@ -23,6 +26,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".AddTasks"></activity>
+        <receiver android:name=".ReminderReceiver" />
     </application>
 
 </manifest>
