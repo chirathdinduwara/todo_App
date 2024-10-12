@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.appcompat.widget.SearchView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -28,34 +29,33 @@ class TodoFragment : Fragment(), TaskItemClickListner {
     private lateinit var viewTasks: ViewTask
     private lateinit var taskAdapter: TaskItemAdapter
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val taskItemDao = TaskItemDB.getDatabase(requireContext()).taskItemDao()
         val repository = TaskItemRepo(taskItemDao)
         val factory = TaskItemModelFactory(repository)
+
         viewTasks = ViewModelProvider(this, factory).get(ViewTask::class.java)
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding = FragmentTodoBinding.inflate(inflater, container, false)
 
         // Setup the RecyclerView
         setRecycleView()
+
         // Setup the SearchView
         setupSearchView()
-
 
         val fab: FloatingActionButton = binding.addTask
         fab.setOnClickListener {
             val intent = Intent(activity, AddTasks::class.java)
             startActivity(intent)
         }
-
 
         return binding.root
     }
@@ -64,7 +64,6 @@ class TodoFragment : Fragment(), TaskItemClickListner {
         binding.taskRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         viewTasks.searchResults.observe(viewLifecycleOwner) { taskItems ->
-
             taskAdapter = TaskItemAdapter(taskItems?.toMutableList() ?: mutableListOf(), this)
             binding.taskRecyclerView.adapter = taskAdapter
 
@@ -79,14 +78,10 @@ class TodoFragment : Fragment(), TaskItemClickListner {
                 }
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                    // Get the position of the item swiped
                     val position = viewHolder.adapterPosition
                     val taskItem = taskAdapter.getItemAt(position)
 
-                    // Delete the task from ViewModel
                     viewTasks.deleteTask(taskItem)
-
-                    // Show a toast
                     Toast.makeText(requireContext(), "${taskItem.name} deleted", Toast.LENGTH_SHORT).show()
                 }
 
@@ -107,56 +102,49 @@ class TodoFragment : Fragment(), TaskItemClickListner {
         }
     }
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun editTaskItem(taskItem: TaskItem) {
-        // Handle editing the task item
-        val context = requireContext() // Get the valid context
-
-        // Logging to check the values before passing
+        val context = requireContext()
         Log.d("EditTaskItem", "Editing task: ${taskItem.name}, ID: ${taskItem.id}")
 
-        // Create an Intent to start the AddTasks activity
         val intent = Intent(context, AddTasks::class.java).apply {
             putExtra("TASK_NAME", taskItem.name)
-
-            putExtra("DUE_TIME", taskItem.dueTime()?.toString()) // Convert LocalTime to String
-            putExtra("COMPLETED_DATE", taskItem.completedDate()?.toString()) // Convert LocalDate to String
-            putExtra("TASK_ID", taskItem.id.toString()) // Pass the ID
+            putExtra("DUE_TIME", taskItem.dueTime()?.toString())
+            putExtra("COMPLETED_DATE", taskItem.completedDate()?.toString())
+            putExtra("TASK_ID", taskItem.id.toString())
         }
 
         try {
-            startActivity(intent) // Start the activity
+            startActivity(intent)
         } catch (e: Exception) {
-            Log.e("EditTaskItem", "Error starting AddTasks: ${e.message}", e) // Log the error
+            Log.e("EditTaskItem", "Error starting AddTasks: ${e.message}", e)
         }
     }
 
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun completeTaskItem(taskItem: TaskItem) {
-        viewTasks.setCompleted(taskItem) // Update the completion status in your data source
-        taskAdapter.notifyDataSetChanged() // Notify the adapter to refresh the RecyclerView
+        viewTasks.setCompleted(taskItem)
+        taskAdapter.notifyDataSetChanged()
         Toast.makeText(requireContext(), "${taskItem.name} marked as completed", Toast.LENGTH_SHORT).show()
     }
 
     private fun setupSearchView() {
         val searchView: SearchView = binding.searchView
 
+        // Set up the search text field properties
+        val searchText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
+        searchText.setTextColor(Color.BLACK) // Typing text color
+        searchText.setHintTextColor(Color.GRAY) // Hint text color
+
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                // Optional: Handle search query submission
                 return false
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 viewTasks.setSearchQuery(newText ?: "")
-
                 return true
             }
         })
     }
-
-
-
 }

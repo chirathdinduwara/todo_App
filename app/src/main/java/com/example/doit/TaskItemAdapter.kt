@@ -11,7 +11,7 @@ import com.example.doit.TaskItemViewHolder
 import com.example.doit.databinding.TaskItemBinding
 
 class TaskItemAdapter(
-    private var taskItems: MutableList<TaskItem>, // Change to var to allow updating
+    private var taskItems: MutableList<TaskItem>,
     private val clickListner: TaskItemClickListner
 ) : RecyclerView.Adapter<TaskItemViewHolder>() {
 

@@ -26,6 +26,9 @@ interface TaskItemDao {
     @Query("SELECT * FROM task_table WHERE id = :taskId")
     suspend fun getTaskById(taskId: Int): TaskItem?
 
+    @Query("SELECT * FROM task_table ORDER BY id DESC LIMIT 3")
+    fun getLatestTasks(): Flow<List<TaskItem>>
+
     @Query("""
     SELECT * FROM task_table 
     WHERE taskName LIKE '%' || :query || '%' 
@@ -33,5 +36,14 @@ interface TaskItemDao {
     ORDER BY id ASC
 """)
     fun searchTasks(query: String): Flow<List<TaskItem>>
+
+    @Query("SELECT COUNT(*) FROM task_table WHERE taskPriority = 'Low'")
+    fun getLowTaskCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM task_table WHERE taskPriority = 'Medium'")
+    fun getMdTaskCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM task_table WHERE taskPriority = 'High'")
+    fun getHgTaskCount(): Flow<Int>
 
 }

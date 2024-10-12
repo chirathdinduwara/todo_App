@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.asLiveData
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -75,6 +76,20 @@ class ViewTask(private val repo: TaskItemRepo) : ViewModel() {
         _searchQuery.value= query
         Log.d("SearchTasks", "Tasks: ${_searchQuery.toString()}")
     }
+
+    fun getHgTaskCount(): Flow<Int> {
+        return repo.getHgTaskCount()
+    }
+
+    fun getLowTaskCount(): Flow<Int> {
+        return repo.getLowTaskCount()
+    }
+
+    fun getMdTaskCount(): Flow<Int> {
+        return repo.getMdTaskCount()
+    }
+
+
 
 
 }

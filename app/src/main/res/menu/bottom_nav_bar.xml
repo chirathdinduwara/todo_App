@@ -8,7 +8,7 @@
     <item android:title="ToDo"
         android:id="@+id/todo"
         android:icon="@drawable/baseline_task_24"/>
-    <item android:title="Profile"
+    <item android:title="About"
         android:id="@+id/profile"
         android:icon="@drawable/baseline_account_circle_24"/>
 </menu>
